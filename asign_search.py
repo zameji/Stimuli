@@ -96,8 +96,7 @@ class Scorer(object):
 			print("\nLoading the saved scores")
 			print("    unigram frequency")
 			with open("scores/wfreqs.pkl", "rb") as i:
-				self.bg_frq = pickle.load(i)			
-			
+				self.wfreq = pickle.load(i)			
 			
 			print("    bigram frequency")
 			with open("scores/bigrams.pkl", "rb") as i:
