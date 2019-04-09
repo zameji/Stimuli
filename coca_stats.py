@@ -96,7 +96,7 @@ if __name__ == "__main__":
 	
 	total, used, free = shutil.disk_usage("\\")
 	print("Free drive space: %d/%d GB" % ((free // (2**30)), (total // (2**30))))
-	if (free // (2**30)) < 9:
+	if (free // (2**30)) < 15:
 		print("WARNING: This is space-intensive operation. It cannot continue if you don't have at least 15 GB of free space on the same drive as the script.\nExiting...")
 		sys.exit(0)	
 		
