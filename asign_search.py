@@ -496,8 +496,7 @@ class Scorer(object):
 		
 		print("    bigram frequency")
 		self.bg_frq_bins = getBins(self.bg_frq, cuts=cuts, method = self.binning, percent=percent)						#	Get from dictionary to list
-		
-		
+				
 		
 		if self.optimizer == "pruning":
 			print("    TP-D")	
@@ -683,17 +682,18 @@ class Scorer(object):
 			start = time.time()
 					
 			max_time = max_time*60
-			
-			pbar = tqdm.tqdm(total = beam)
-			pbar.set_description("Samples tried")
+
 		
 			best = 14**2
 			tiebreak = 1
-			best_sample = []			
+			best_sample = []	
+			
+			pbar = tqdm.tqdm(total = beam)
+			pbar.set_description("Samples tried")			
 			for sample in range(beam):
-				sample = nrandom.choice(range(len(self.bgs)), floor(num*1.1), replace=False)
+				sample = list(nrandom.choice([x for x in range(len(self.bgs))], min(floor(num*1.1), len(self.bgs)), replace=False))
 				sample = [self.bgs[x] for x in sample]
-				
+
 				scores = self.score(sample)										# remove bigram string to allow numpy operation
 				scores = array([x[1:] for x in scores])
 				performance, tiebreaker = getCorPerformance(scores)
@@ -735,7 +735,7 @@ class Scorer(object):
 				
 			else:
 				print("\nTimeout limit exceeded, returning best sample at this moment.")
-				results = best_sample[0:num]							# Crop which we don't have
+				results = best_sample[0:min(num, len(best_sample))]							# Crop which we don't have
 
 			#plt.imshow(self.dist, cmap="hot", interpolation="bilinear")
 			#plt.suptitle("Distribution accross scores")
@@ -935,13 +935,12 @@ if __name__ == "__main__":
 				
 		scorer.binning = "exact"
 		scorer.optimizer = optimizer
-		print(bins)
-		
-		i = 0
+		print(bins)		
+		iter = 0
 		for strat in tqdm.tqdm(range(len(bins)-1)):
-			items = scorer.get_random(floor(num/(len(bins)-1)), cuts=cuts, seed=seed+i, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
+			items = scorer.get_random(floor(num/(len(bins)-1)), cuts=cuts, seed=seed+iter, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
 				pos=[pos_1, pos_2], max_time=max_time, min_bg_freq=floor(bins[strat]), max_bg_freq=ceil(bins[strat+1])+1, min_uni_freq=min_uni_freq, percent=100)			
-			i +=1
+			iter +=1
 			
 			with open("_temp.csv", "a") as outfile:
 				out_csv = csv.writer(outfile)				
