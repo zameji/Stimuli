@@ -177,14 +177,10 @@ if __name__ == "__main__":
 	counter = collections.Counter()
 
 
-	i = 0
 	for line in tqdm.tqdm(coca):
 		bgs = json.loads(line)
 		bgs = [x.strip() for x in bgs if not x.startswith("##")]
 		counter.update(bgs)
-		i+=1
-		if i == 1:
-			break
 		
 	coca.close()	
 	print("        Cropping the bigram dict to items with freq > 4")
@@ -193,7 +189,7 @@ if __name__ == "__main__":
 
 	# backup bigram stats file
 	print("        Saving")
-	backup_out = open("bigrams_debug.json", "w+")
+	backup_out = open("bigrams.json", "w+")
 	backup_out.write(json.dumps(counter))	
 	backup_out.close()
 		
@@ -205,7 +201,7 @@ if __name__ == "__main__":
 		
 	w_freq = dict(w_freq)
 
-	backup_out = open("wfreqs_debug.json", "w+")
+	backup_out = open("wfreqs.json", "w+")
 	backup_out.write(json.dumps(w_freq))
 	backup_out.close()
 	
@@ -282,11 +278,11 @@ if __name__ == "__main__":
 
 	del backward_pairs
 
-	backup_out = open("fwd_debug.json", "w+")
+	backup_out = open("fwd.json", "w+")
 	backup_out.write(json.dumps(forward_probs))
 	backup_out.close()
 				
-	backup_out = open("bckw_debug.json", "w+")
+	backup_out = open("bckw.json", "w+")
 	backup_out.write(json.dumps(backward_probs))	
 	backup_out.close()
 
@@ -323,11 +319,11 @@ if __name__ == "__main__":
 		score = Decimal(counter[bigram])/((item1_freq*item2_freq)/Decimal(w_count))	
 		mi_score[bigram] = float(score.ln())
 
-	backup_out = open("miscore_debug.json", "w+")
+	backup_out = open("miscore.json", "w+")
 	backup_out.write(json.dumps(mi_score))
 	backup_out.close()	
 	del mi_score
-	backup_out = open("mi3score_debug.json", "w+")
+	backup_out = open("mi3score.json", "w+")
 	backup_out.write(json.dumps(mi3_score))	
 	backup_out.close()	
 	del mi3_score
@@ -354,7 +350,7 @@ if __name__ == "__main__":
 		denom = Decimal(sqrt(expe*(Decimal(1)-prob)))		# std.deviation (kind of)
 		z_score[bigram] = float(numer/denom)
 		
-	backup_out = open("zscore_debug.json", "w+")
+	backup_out = open("zscore.json", "w+")
 	backup_out.write(json.dumps(z_score))
 	backup_out.close()	
 	del z_score
@@ -376,7 +372,7 @@ if __name__ == "__main__":
 		# Based on Gries
 		t_score[bigram]= float((a-expe)/Decimal(sqrt(expe)))
 		
-	backup_out = open("tscore_debug.json", "w+")
+	backup_out = open("tscore.json", "w+")
 	backup_out.write(json.dumps(t_score))		
 	backup_out.close()	
 	del t_score
@@ -407,11 +403,11 @@ if __name__ == "__main__":
 		# Based on Gries
 		delta_p12[bigram]= float(p1-p2)
 		
-	backup_out = open("delta_p21_debug.json", "w+")
+	backup_out = open("delta_p21.json", "w+")
 	backup_out.write(json.dumps(delta_p21))
 	backup_out.close()	
 	
-	backup_out = open("delta_p12_debug.json", "w+")
+	backup_out = open("delta_p12.json", "w+")
 	backup_out.write(json.dumps(delta_p12))		
 	backup_out.close()
 	
@@ -435,7 +431,7 @@ if __name__ == "__main__":
 		
 		dice_score[bigram]= log(float(score),2)
 		
-	backup_out = open("dicescore_debug.json", "w+")
+	backup_out = open("dicescore.json", "w+")
 	backup_out.write(json.dumps(dice_score))	
 	backup_out.close()	
 	del dice_score
@@ -471,7 +467,7 @@ if __name__ == "__main__":
 	
 	print("        Dictionarizing and saving")
 	ll_score = dict(ll_score)
-	backup_out = open("llscore_debug.json", "w+")	
+	backup_out = open("llscore.json", "w+")	
 	backup_out.write(json.dumps(ll_score))
 	backup_out.close()		
 	del ll_score
@@ -524,7 +520,7 @@ if __name__ == "__main__":
 	worker.join()
 	print("        Dictionarizing and saving")
 	g_score = dict(g_score)
-	backup_out = open("gscore_debug.json", "w+")
+	backup_out = open("gscore.json", "w+")
 	backup_out.write(json.dumps(g_score))
 	backup_out.close()		
 	del g_score
@@ -536,8 +532,8 @@ if __name__ == "__main__":
 		print("Couldn't remove the file gscoretemp.bck, please do it manually")
 		
 	########### This is a clumsy way of converting the calculated scores into a pandas DataFrame; future versions should get rid of it
-	from convert_to_pd import Converter
-	worker = Converter()	
-	worker.convert()	
+	# from convert_to_pd import Converter
+	# worker = Converter()	
+	# worker.convert()	
 	
 	exit()	

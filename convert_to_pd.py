@@ -26,7 +26,7 @@ class Converter(object):
 			print("Exiting")
 			sys.exit(1)		
 
-	def convert(self, outfile = "scores."):
+	def convert(self, outfile = "data.csv"):
 	
 		print("\nLoading the saved scores")
 		print("    unigram frequency")
@@ -124,5 +124,5 @@ class Converter(object):
 		print(self.compact.columns)
 		self.compact[["tp_d", "tp_b", "log_lklhd", "dice", "t_score", "z_score", "mi_score", "mi3_score", "g_score", "delta_p12", "delta_p21"]] = self.compact[["tp_d", "tp_b", "log_lklhd", "dice", "t_score", "z_score", "mi_score", "mi3_score", "g_score", "delta_p12", "delta_p21"]].astype("float32")
 		self.compact[["bigram_freq", "w1_freq", "w2_freq"]]	= self.compact[["bigram_freq", "w1_freq", "w2_freq"]].astype("int32")
-		self.compact.to_csv("data.csv", index=False)
+		self.compact.to_csv(outfile, index=False)
 	

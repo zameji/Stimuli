@@ -11,4 +11,4 @@ max_bg_freq = 10000000
 min_uni_freq = 5					# lowest accepted unigram frequency
 seed = 1991							# ensures reproducible results
 optimizer = "quick"
-beam width = 10						# random samples used in quick sampling
+beam_width = 10						# random samples used in quick sampling

@@ -562,7 +562,7 @@ class Scorer(object):
 				if self.populated >= num and reached == False:
 					reached = True
 					
-				samples = [nrandom.random_integers(0,len(self.bgs)-1,10) for x in range(1000)]
+				samples = [nrandom.choice(range(len(self.bgs)),10, replace=False) for x in range(1000)]
 				samples = [[self.bgs[y] for y in x] for x in samples]
 				scores = [self.score(x) for x in samples]										# remove bigram string to allow numpy operation
 				scores = [array([x[1:] for x in y]) for y in scores]
@@ -691,7 +691,7 @@ class Scorer(object):
 			tiebreak = 1
 			best_sample = []			
 			for sample in range(beam):
-				sample = nrandom.random_integers(0,len(self.bgs)-1, floor(num*1.1))
+				sample = nrandom.choice(range(len(self.bgs)), floor(num*1.1), replace=False)
 				sample = [self.bgs[x] for x in sample]
 				
 				scores = self.score(sample)										# remove bigram string to allow numpy operation
@@ -936,10 +936,12 @@ if __name__ == "__main__":
 		scorer.binning = "exact"
 		scorer.optimizer = optimizer
 		print(bins)
+		
+		i = 0
 		for strat in tqdm.tqdm(range(len(bins)-1)):
-			items = scorer.get_random(floor(num/(len(bins)-1)), cuts=cuts, seed=seed, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
+			items = scorer.get_random(floor(num/(len(bins)-1)), cuts=cuts, seed=seed+i, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
 				pos=[pos_1, pos_2], max_time=max_time, min_bg_freq=floor(bins[strat]), max_bg_freq=ceil(bins[strat+1])+1, min_uni_freq=min_uni_freq, percent=100)			
-				
+			i +=1
 			
 			with open("_temp.csv", "a") as outfile:
 				out_csv = csv.writer(outfile)				
@@ -949,18 +951,19 @@ if __name__ == "__main__":
 		print("Saving")
 		scores = pd.read_csv("_temp.csv")
 		scores["w1"], scores["w2"] = scores["bigram"].str.split(' ', 1).str
-		scores = scores.drop_duplicates(subset=["w1", "w2"])
+		scores.index = range(scores.shape[0])
+		scores = scores.drop_duplicates(subset=["w1", "w2", "bigram"])
 		scores.drop(["w1", "w2"], 1, inplace=True)
 		
 		if scores.shape[0] > num:
-			ints = sorted(nrandom.randint(0, scores.shape[0]-1, num))			
+			ints = sorted(nrandom.choice(range[scores.shape[0]], num, replace=False))			
 			scores = scores.iloc[ints,:]
 		
-		scores.to_csv(outpath)
-		try:
-			os.remove("_temp.csv")
-		except:
-			print("Couldn't remove the temp file.")
+		scores.to_csv(outpath, index=False)
+		# try:
+			# os.remove("_temp.csv")
+		# except:
+			# print("Couldn't remove the temp file.")
 			
 		print("Do you want to save your settings? [y/N]")
 		dec = ""
