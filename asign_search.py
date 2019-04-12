@@ -752,7 +752,7 @@ class Scorer(object):
 						
 if __name__ == "__main__":
 	mode = None
-	while mode not in ["score", "search", "strat_search"]:
+	while mode not in ["score", "search", "strat_search", "match"]:
 		mode = input("Which mode should this program run in?\n Score/search: ")
 	
 	if mode.lower() == "score":
@@ -926,19 +926,21 @@ if __name__ == "__main__":
 			num, cuts, disbalance_penalty, max_time, pos_1, pos_2, w_1, w_2, min_uni_freq, min_bg_freq, max_bg_freq, seed, optimizer, beam_width = getSettings()
 			
 		scorer = Scorer()
+		
 		scorer.beam_width = beam_width
-		scorer.binning = "log"
+		scorer.binning = "exact"
 		items = scorer.get_random(1, cuts=10, seed=seed, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
 			pos=[pos_1, pos_2], max_time=max_time, min_bg_freq=min_bg_freq, max_bg_freq=max_bg_freq, min_uni_freq=min_uni_freq, percent=95)
 		
-		bins = [min_bg_freq] + list(scorer.bg_frq_bins) + [max_bg_freq]
+		bins = list(scorer.bg_frq_bins) + [max_bg_freq]
+		bins[0] = [min_bg_freq]
 				
 		scorer.binning = "exact"
 		scorer.optimizer = optimizer
 		print(bins)		
 		iter = 0
 		for strat in tqdm.tqdm(range(len(bins)-1)):
-			items = scorer.get_random(floor(num/(len(bins)-1)), cuts=cuts, seed=seed+iter, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
+			items = scorer.get_random(floor((num*1.5)/(len(bins)-1)), cuts=cuts, seed=seed+iter, disbalance_penalty = disbalance_penalty, words=[w_1, w_2],
 				pos=[pos_1, pos_2], max_time=max_time, min_bg_freq=floor(bins[strat]), max_bg_freq=ceil(bins[strat+1])+1, min_uni_freq=min_uni_freq, percent=100)			
 			iter +=1
 			
@@ -951,18 +953,165 @@ if __name__ == "__main__":
 		scores = pd.read_csv("_temp.csv")
 		scores["w1"], scores["w2"] = scores["bigram"].str.split(' ', 1).str
 		scores.index = range(scores.shape[0])
-		scores = scores.drop_duplicates(subset=["w1", "w2", "bigram"])
+		scores = scores.drop_duplicates(subset=["bigram"], keep="last")
+		scores = scores.drop_duplicates(subset=["w1"], keep="last")
+		scores = scores.drop_duplicates(subset=["w2"], keep="last")
 		scores.drop(["w1", "w2"], 1, inplace=True)
 		
 		if scores.shape[0] > num:
-			ints = sorted(nrandom.choice(range[scores.shape[0]], num, replace=False))			
+			ints = sorted(nrandom.choice(range(scores.shape[0]), num, replace=False))			
 			scores = scores.iloc[ints,:]
 		
 		scores.to_csv(outpath, index=False)
-		# try:
-			# os.remove("_temp.csv")
-		# except:
-			# print("Couldn't remove the temp file.")
+		try:
+			os.remove("_temp.csv")
+		except:
+			print("Couldn't remove the temp file.")
+			
+		print("Do you want to save your settings? [y/N]")
+		dec = ""
+		while dec.lower() not in set(["y", "n"]):
+			dec = input("[y/N]") or "N"
+			
+		if dec.lower() == "y":
+			settings = ""
+			settings += "num = %i\n" % num
+			settings += "cuts = %i\n" % cuts
+			settings += "disbalance_penalty = %i\n" % disbalance_penalty
+			settings += 'w_1 ="' + w_1 + '"\n'
+			settings += 'w_2 ="' + w_2 + '"\n'
+			settings += 'pos_1 ="' + pos_1 + '"\n'
+			settings += 'pos_2 ="' + pos_2 + '"\n'
+			settings += "max_time = %i\n" % max_time
+			settings += "min_bg_freq = %i\n" % min_bg_freq
+			settings += "max_bg_freq = %i\n" % max_bg_freq
+			settings += "min_uni_freq = %i\n" % min_uni_freq
+			settings += "optimizer = " + optimizer +"\n"
+			
+			with open("search_settings.py", "w+") as f:
+				f.write(settings)
+				
+		print("Done. Press RETURN to exit")
+		wait = input()
+		sys.exit(0)
+
+	elif mode.lower() == "match":
+		infile = input("Where is the file with selected stimuli? ") or "not_a_file"
+		while os.path.isfile(infile) != True:
+			infile = input("Not a valid file, try to specify the full path. ") or "not_a_file"
+
+		stimuli = pd.read_csv(infile)
+		stimuli.dropna(0, how="all", subset=["bigram"], inplace=True)
+		
+		try:
+			matchWord = int(input("Which word should be matched? [1-%i]" % len(stimuli["bigram"][0].split()))) - 1
+		except:	
+			matchWord = 0
+
+		try:
+			min_t_score = int(input("What is the lowest accepted t-score?"))
+		except:	
+			min_t_score = -1000000			
+			
+		try:
+			max_t_score = int(input("What is the highest accepted t-score?"))
+		except:	
+			max_t_score = +1000000
+			
+		keys = set([x.split()[matchWord] for x in list(stimuli["bigram"].values)])
+			
+		if len(sys.argv) > 2:
+			outpath = sys.argv[2]
+		else:
+			outpath = input("Where should the results be saved?\n    ")
+
+		with open("_temp.csv", "w+") as outfile:
+			out_csv = csv.writer(outfile)				
+			out_csv.writerow(["bigram", "w1_freq", "w2_freq",  "bigram_freq", "tp_b", "tp_d", "log_lklhd", "dice", "t_score", "z_score", "mi_score", "mi3_score", "g_score", "delta_p12", "delta_p21"])
+		
+		ram_present = psutil.virtual_memory()[0] >> 30
+		ram_available = psutil.virtual_memory()[1] >> 30
+
+		# Check the RAM installed and available, if sufficient use the default scorer, otherwise use the lite version
+		if ram_present > 7:
+		# if ram_present > 7 and ram_available > 5:
+			pass	
+		else:
+			print("WARNING: This is RAM-intensive operation. It cannot continue if you don't have at least 8 GB of RAM.\nExiting...")
+			sys.exit(0)
+			
+		max_time = 0
+		disbalance_penalty = 0
+		cuts = 0
+		num = 0
+		pos = ""
+		
+		saved = False
+		if os.path.isfile("search_settings.py"):
+			print("Saved settings found. Do you want to use them? [Y/n]")
+			dec = ""
+			while dec.lower() not in set(["y", "n"]):
+				dec = input("[Y/n]") or "Y"
+			
+			if dec.lower() == "y":			
+				saved = True
+				
+		if saved == True:	
+			from search_settings import *
+			print("Using saved settings")
+			
+		else:
+			num, cuts, disbalance_penalty, max_time, pos_1, pos_2, w_1, w_2, min_uni_freq, min_bg_freq, max_bg_freq, seed, optimizer, beam_width = getSettings()
+		
+		print("\n_____________________\nGrab a coffee...or ten")
+		
+		scorer = Scorer()
+		#####
+		# Prefilter the data for only the adjectives?
+		# Prefilter the data by t-score?
+		#####
+		
+		print("Pre-filtering the data for\n\t-matched words\n\t-fitting t-score")
+		scorer.bg_frq = {k:v for k,v in tqdm.tqdm(scorer.bg_frq.items()) if (k.split(" ")[matchWord].split("_")[0] in keys) and ((scorer.t_score[k] >= min_t_score) and (scorer.t_score[k] <= max_t_score))}		
+		
+		scorer.beam_width = beam_width								
+		scorer.binning = "exact"
+		scorer.optimizer = optimizer
+	
+		iter = 0
+		for key in tqdm.tqdm(keys):
+			try:
+				matched_pattern = [w_1, w_2]
+				matched_pattern[matchWord] = key
+				items = scorer.get_random(num, cuts=cuts, seed=seed+iter, disbalance_penalty = disbalance_penalty, words=matched_pattern,
+					pos=[pos_1, pos_2], max_time=max_time, min_bg_freq=min_bg_freq, max_bg_freq=max_bg_freq, min_uni_freq=min_uni_freq, percent=95)			
+				iter +=1
+				
+				with open("_temp.csv", "a") as outfile:
+					out_csv = csv.writer(outfile)				
+					for i in tqdm.tqdm(items):
+						out_csv.writerow(i)
+			except:				
+				wait = input("No matches for %s. Hit RETURN to continue" % key)
+
+		print("Saving")
+		scores = pd.read_csv("_temp.csv")
+		scores["w1"], scores["w2"] = scores["bigram"].str.split(' ', 1).str
+		scores.index = range(scores.shape[0])
+		scores = scores.drop_duplicates(subset=["bigram"], keep="last")
+		# scores = scores.drop_duplicates(subset=["w1"], keep="last")
+		# scores = scores.drop_duplicates(subset=["w2"], keep="last")
+		scores.drop(["w1", "w2"], 1, inplace=True)
+		
+		if scores.shape[0] > num:
+			ints = sorted(nrandom.choice(range(scores.shape[0]), num, replace=False))			
+			scores = scores.iloc[ints,:]
+		
+		scores.to_csv(outpath, index=False)
+		try:
+			os.remove("_temp.csv")
+		except:
+			print("Couldn't remove the temp file.")
 			
 		print("Do you want to save your settings? [y/N]")
 		dec = ""

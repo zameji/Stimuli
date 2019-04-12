@@ -16,6 +16,8 @@ from math import log
 import os
 import sys
 
+path_to_coca = "C:/projects/COCA"
+
 # Helper functions to allow multiprocessing
 def gscorer(items):
 	"""Take a string line (JSON serialized list) as input, return bigram + G-score"""
@@ -102,7 +104,7 @@ if __name__ == "__main__":
 		
 	print("Initializing...")
 	files = []
-	for dirpath, dirnames, filenames in os.walk("C:/projects/COCA"):
+	for dirpath, dirnames, filenames in os.walk(path_to_coca):
 		files.extend([os.path.join(dirpath, file) for file in filenames])
 	
 	if os.path.isfile("_COCA2.txt"):
@@ -535,5 +537,19 @@ if __name__ == "__main__":
 	# from convert_to_pd import Converter
 	# worker = Converter()	
 	# worker.convert()	
+	
+	
+	########## This is a clumsy way of calculating dispersion scores; efficient implementation would do that during preprocessing 
+	####(though memory may be limiting there)
+	
+	# from dispersion_counter import DispersionCounter
+	# worker = DispersionCounter(path=path_to_coca)
+	# print("Collecting dispersion scores")
+	# for ext in tqdm.tqdm(["acad", "fic", "news", "mag", "spok"]):
+		# worker.collect(ext)
+		# gc.collect()
+		
+	# print("Collecting done - preprocessing final data")
+	# worker.save()	
 	
 	exit()	

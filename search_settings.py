@@ -1,4 +1,4 @@
-num = 2000							# number of stimuli
+num = 5000							# number of stimuli
 cuts = 20							# number of bins used to determine the distribution
 disbalance_penalty = 3				# penalty for disbalanced distributions (disbalace equals sum[(real-uniform)**2])
 w_1 = "^[a-z]+$"					# RegEx describing w1
