@@ -3,3 +3,6 @@
 *.json
 *.json
 *.txt
+*.pyc
+
+envStimuli
