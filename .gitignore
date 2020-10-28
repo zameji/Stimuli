@@ -2,7 +2,6 @@
 *.pkl
 *.json
 *.json
-*.txt
 *.pyc
 
 envStimuli
