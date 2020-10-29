@@ -1,5 +1,5 @@
 language: python
-before install: pip install -r requirements.txt
+before_install: pip install -r requirements.txt
 script:
   - pytest --cov=src
   - bash <(curl -s https://codecov.io/bash)

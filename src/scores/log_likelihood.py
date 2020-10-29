@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-def zero_log(num):
+def zero_log(num: Decimal):
     """Wrapper to return log as a Decimal. If zero is given, zero is returned
 
     Args:
@@ -12,7 +12,7 @@ def zero_log(num):
     """
     return num.ln() if num != 0 else 0
     
-def log_likelihood(a,b,c,d):
+def log_likelihood(a: int, b: int, c: int, d: int):
     """Calculate log likelihood of a bigram
     The collocation value is calculated as follows:
 

@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-def backward_probability(bigram_frequency, word_2_frequency):
-  """Calculate forward probability
+def backward_probability(bigram_frequency: int, word_2_frequency: int):
+  """Calculate forward probability.
   Equals 
     fwd_prob = bigram frequency / left word frequency
 
