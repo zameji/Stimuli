@@ -3,5 +3,6 @@
 *.json
 *.json
 *.pyc
+*.coverage
 
 envStimuli

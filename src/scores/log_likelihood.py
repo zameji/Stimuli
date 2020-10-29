@@ -1,5 +1,4 @@
 from decimal import Decimal
-from math import log as built_in_log
 
 def zero_log(num):
     """Wrapper to return log as a Decimal. If zero is given, zero is returned
@@ -11,7 +10,7 @@ def zero_log(num):
     Returns:
         Decimal: logarithm of number with base, or 0 if input is zero
     """
-    return Decimal(built_in_log(num)) if num != 0 else 0
+    return num.ln() if num != 0 else 0
     
 def log_likelihood(a,b,c,d):
     """Calculate log likelihood of a bigram
@@ -41,8 +40,6 @@ def log_likelihood(a,b,c,d):
     c = Decimal(c)
     d = Decimal(d)
     
-    base = [a, b, c, d, a+b, a+c, b+d, c+d, a+b+c+d]
-        
     likelihood = 2*( a*zero_log(a) + b*zero_log(b) + c*zero_log(c) + d*zero_log(d) - (a+b)*zero_log(a+b) - (a+c)*zero_log(a+c) - (b+d)*zero_log(b+d) - (c+d)*zero_log(c+d) + (a+b+c+d)*zero_log(a+b+c+d))
  
     return(float(likelihood))
