@@ -1,7 +1,7 @@
 from decimal import Decimal
 from math import log
 
-def g_score(bigram_freq: int, w_freq_item_1: int, w_freq_item_2: int, fwd_type_count_item_1: int, bckw_type_count_item_2: int):
+def g_score(bigram_freq: int, w_freq_item_1: int, w_freq_item_2: int, fwd_type_count_item_1: int, bckw_type_count_item_2: int) -> float:
   """Calculate G-Score of a node-collocate pair. 
   Based on Daudaravicius and Marcinkeviciene (or Petrauskaite) 2004. Gravity Counts for the boundaries of collocations
   Calculated as 

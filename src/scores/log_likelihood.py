@@ -12,7 +12,7 @@ def zero_log(num: Decimal):
     """
     return num.ln() if num != 0 else 0
     
-def log_likelihood(a: int, b: int, c: int, d: int):
+def log_likelihood(a: int, b: int, c: int, d: int) -> float:
     """Calculate log likelihood of a bigram
     The collocation value is calculated as follows:
 
